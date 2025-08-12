@@ -1,10 +1,10 @@
 FROM eclipse-temurin:8-jdk-jammy
 
 ARG BASE_DIR_PATH="/opt"
-ARG HADOOP_VERSION="3.3.6"
-ARG HIVE_VERSION="3.1.3"
-ARG SPARK_VERSION="3.5.5"
-ARG JAR_POSTGRES_VERSION="42.7.5"
+ARG HADOOP_VERSION="3.4.1"
+ARG SPARK_VERSION="3.5.6"
+ARG HIVE_VERSION="4.0.1"
+ARG POSTGRES_JAR_VERSION="42.7.7"
 ARG USER_HDFS="root"
 
 ARG PATH_HOST_BASE_DIR
@@ -12,10 +12,13 @@ ARG PATH_HOST_CONFIG_SERVICES_FILES="/hadoop_platform/configs/services"
 ARG PATH_HOST_CONFIG_NODES_FILES="/hadoop_platform/configs/nodes"
 ARG PATH_HOST_TEST_FILES="/tests"
 
-ARG LINK_DOWNLOAD_HADOOP="https://dlcdn.apache.org/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz"
-ARG LINK_DOWNLOAD_SPARK="https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz"
+ARG LINK_DOWNLOAD_HADOOP="https://downloads.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz"
+ARG LINK_DOWNLOAD_SPARK="https://dlcdn.apache.org/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3.tgz"
 ARG LINK_DOWNLOAD_HIVE="https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz"
-ARG LINK_JAR_POSTGRES="https://repo1.maven.org/maven2/org/postgresql/postgresql/${JAR_POSTGRES_VERSION}/postgresql-${JAR_POSTGRES_VERSION}.jar"
+
+ARG LINK_DOWNLOAD_POSTGRES_JAR="https://repo1.maven.org/maven2/org/postgresql/postgresql/${POSTGRES_JAR_VERSION}/postgresql-${POSTGRES_JAR_VERSION}.jar"
+ARG LINK_DOWNLOAD_HIVE_SPARK_JAR="https://repo1.maven.org/maven2/org/apache/spark/spark-hive_2.12/3.5.6/spark-hive_2.12-3.5.6.jar"
+ARG LINK_DOWNLOAD_HUDI_SPARK_JAR="https://repo1.maven.org/maven2/org/apache/hudi/hudi-spark3.5-bundle_2.12/1.0.2/hudi-spark3.5-bundle_2.12-1.0.2.jar"
 
 ENV PATH_NODE_FILES="/opt/nodes_files"
 
@@ -71,11 +74,15 @@ RUN mkdir -p ${HADOOP_HOME} && \
     wget ${LINK_DOWNLOAD_HADOOP} -O ${HADOOP_TAR_GZ_FILE} && \
     wget ${LINK_DOWNLOAD_SPARK} -O ${SPARK_TAR_GZ_FILE} && \
     wget ${LINK_DOWNLOAD_HIVE} -O ${HIVE_TAR_GZ_FILE} && \
-    wget ${LINK_JAR_POSTGRES} && \
+    wget ${LINK_DOWNLOAD_POSTGRES_JAR} && \
+    wget ${LINK_DOWNLOAD_HIVE_SPARK_JAR} && \
+    wget ${LINK_DOWNLOAD_HUDI_SPARK_JAR} && \
     tar -xvzf ${HADOOP_TAR_GZ_FILE} -C ${HADOOP_HOME} --strip-components=1 &&\
     tar -xvzf ${SPARK_TAR_GZ_FILE} -C ${SPARK_HOME} --strip-components=1 && \
     tar -xvzf ${HIVE_TAR_GZ_FILE} -C ${HIVE_HOME} --strip-components=1 && \
-    mv postgresql-${JAR_POSTGRES_VERSION}.jar ${HIVE_HOME}/lib && \ 
+    mv postgresql-${POSTGRES_JAR_VERSION}.jar ${HIVE_HOME}/lib && \
+    mv hudi-spark3.5-bundle_2.12-1.0.2.jar ${SPARK_HOME}/jars && \
+    mv spark-hive_2.12-3.5.6.jar ${SPARK_HOME}/jars && \
     rm ${HADOOP_TAR_GZ_FILE} && \
     rm ${SPARK_TAR_GZ_FILE} && \
     rm ${HIVE_TAR_GZ_FILE}

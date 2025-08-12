@@ -4,7 +4,7 @@ x-common-env: &common-env
   HADOOP_PLATFORM_GID: ${HADOOP_PLATFORM_GID} 
 services:
   postgres:
-    image: postgres:17.4
+    image: postgres:17.5
     environment:
       - POSTGRES_PASSWORD=1234
     container_name: postgres       
@@ -21,7 +21,7 @@ services:
         ipv4_address: 172.20.0.2
    
   master_node:
-    image: hadoop_platform
+    image: spark_hudi
     environment:
       <<: *common-env
     entrypoint: ["bash", "-c", "bash /opt/nodes_files/master_entrypoint.sh"]    
@@ -50,13 +50,13 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 60s   
+      start_period: 120s   
     networks:
       hadoop_network:
         ipv4_address: 172.20.0.3
 
   worker_node:
-    image: hadoop_platform
+    image: spark_hudi
     entrypoint: ["bash", "-c", "bash /opt/nodes_files/worker_entrypoint.sh"] 
     environment:
       <<: *common-env   
@@ -81,8 +81,8 @@ services:
         ipv4_address: 172.20.0.4
 
   client_node:
-    image: hadoop_platform     
-    entrypoint: ["bash", "-c", "bash /opt/spark/bin/spark-submit /opt/spark/conf/test_hive.py"] 
+    image: spark_hudi
+    entrypoint: ["bash", "-c", "tail -f /dev/null"]
     container_name: client_node
     ports:
       - "9090:9090"
@@ -98,7 +98,7 @@ services:
 
 networks:
   hadoop_network:
-    name: hadoop_network
+    name: spark_hudi_network
     driver: bridge
     ipam:
       config:

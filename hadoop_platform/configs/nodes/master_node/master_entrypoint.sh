@@ -61,12 +61,13 @@ if [ $attempt -lt $max_attempts ]; then
     fi
 fi
 
-until hive -e "SHOW DATABASES;"; do
+# # # until hive -e "SHOW DATABASES;"; do
+until beeline -u "jdbc:hive2://" -e "SHOW DATABASES;"; do
     sleep 2
 done
 
 echo  "Creating bronze schema in metastore"
-hive -e "CREATE SCHEMA IF NOT EXISTS BRONZE;"
+beeline -u "jdbc:hive2://" -e "CREATE SCHEMA IF NOT EXISTS BRONZE;"
 echo "Hadoop environment initialized successfully!"
 
 echo "Starting YARN ResourceManager..."
