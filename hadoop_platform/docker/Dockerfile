@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jdk-jammy
+FROM eclipse-temurin:11-jdk-jammy
 
 ARG BASE_DIR_PATH="/opt"
 ARG HADOOP_VERSION="3.4.1"
@@ -25,6 +25,7 @@ ENV PATH_NODE_FILES="/opt/nodes_files"
 ENV CONFIGS="${BASE_DIR_PATH}/configs"
 ENV NODES_FILES="${BASE_DIR_PATH}/nodes_files"
 ENV TESTS="${BASE_DIR_PATH}/tests"
+ENV SCRIPTS="${BASE_DIR_PATH}/scripts"
 
 ENV HADOOP_HOME="${BASE_DIR_PATH}/hadoop"
 ENV SPARK_HOME="${BASE_DIR_PATH}/spark"

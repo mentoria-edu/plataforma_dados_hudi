@@ -60,7 +60,7 @@ services:
     entrypoint: ["bash", "-c", "bash /opt/nodes_files/worker_entrypoint.sh"] 
     environment:
       <<: *common-env   
-    container_name: worker_node      
+    container_name: workernode      
     ports:
       - "9864:9864"
       - "8042:8042"
@@ -83,10 +83,12 @@ services:
   client_node:
     image: spark_hudi
     entrypoint: ["bash", "-c", "tail -f /dev/null"]
-    container_name: client_node
+    container_name: clientnode
     ports:
       - "9090:9090"
       - "9091:9091"
+    volumes:
+      - ../scripts:/opt/scripts
     depends_on:
       master_node:
         condition: service_healthy
