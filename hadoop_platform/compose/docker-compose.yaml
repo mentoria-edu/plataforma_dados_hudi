@@ -4,7 +4,7 @@ x-common-env: &common-env
   HADOOP_PLATFORM_GID: ${HADOOP_PLATFORM_GID} 
 services:
   postgres:
-    image: postgres:17.5
+    image: postgres:13.22
     environment:
       - POSTGRES_PASSWORD=1234
     container_name: postgres       
@@ -24,7 +24,13 @@ services:
     image: spark_hudi
     environment:
       <<: *common-env
-    entrypoint: ["bash", "-c", "bash /opt/nodes_files/master_entrypoint.sh"]    
+    # entrypoint: ["bash", "-c", "bash /opt/nodes_files/master_entrypoint.sh"]
+    entrypoint: ["bash", "-c", "\
+                  bash /opt/nodes_files/start_hdfs.sh && \
+                  bash /opt/nodes_files/start_hive.sh && \
+                  bash /opt/nodes_files/start_yarn.sh && \
+                  tail -f /dev/null\
+                "]    
     volumes:
       - namenode_hadoop_platform:/opt/hadoop/dfs/name
     container_name: masternode
@@ -50,7 +56,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 120s   
+      start_period: 300s   
     networks:
       hadoop_network:
         ipv4_address: 172.20.0.3
@@ -100,7 +106,7 @@ services:
 
 networks:
   hadoop_network:
-    name: spark_hudi_network
+    name: spark-hudi-network
     driver: bridge
     ipam:
       config:

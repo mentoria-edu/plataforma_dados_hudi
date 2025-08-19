@@ -1,9 +1,9 @@
-FROM eclipse-temurin:11-jdk-jammy
+FROM eclipse-temurin:8-jdk-jammy
 
 ARG BASE_DIR_PATH="/opt"
 ARG HADOOP_VERSION="3.4.1"
 ARG SPARK_VERSION="3.5.6"
-ARG HIVE_VERSION="4.0.1"
+ARG HIVE_VERSION="3.1.2"
 ARG POSTGRES_JAR_VERSION="42.7.7"
 ARG USER_HDFS="root"
 

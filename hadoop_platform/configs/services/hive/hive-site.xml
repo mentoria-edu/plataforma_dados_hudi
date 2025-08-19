@@ -17,21 +17,17 @@
         <name>javax.jdo.option.ConnectionPassword</name>
         <value>1234</value>
     </property>
-    <!-- <property>
+    <property>
         <name>hive.metastore.port</name>
         <value>9083</value>
     </property>
     <property>
         <name>hive.metastore.uris</name>
-        <value>thrift://localhost:9083</value>
-    </property>  -->
-    <property>
-        <name>datanucleus.autoStartMechanism</name>
-        <value>SchemaTable</value>
+        <value>thrift://masternode:9083</value>
     </property> 
 	<property>
 	    <name>datanucleus.schema.autoCreateAll</name>
-	    <value>true</value>        
+	    <value>false</value>        
     </property>
     <property>
         <name>hive.metastore.schema.verification</name>

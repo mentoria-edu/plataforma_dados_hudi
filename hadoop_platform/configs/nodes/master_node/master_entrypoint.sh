@@ -42,23 +42,30 @@ while [ $attempt -lt $max_attempts ]; do
     hdfs dfsadmin -safemode leave
 done
 
+echo "Creating directories in HDFS..."
+hadoop fs -mkdir -p /spark_events 
+hadoop fs -mkdir -p /lakehouse
+hadoop fs -mkdir -p /yarn_logs
+hadoop fs -mkdir -p /spark_events_log
+
+
 if [ $attempt -lt $max_attempts ]; then
-    echo "Creating directories in HDFS..."
-    hadoop fs -mkdir -p /spark_events 
-    hadoop fs -mkdir -p /lakehouse
-    hadoop fs -mkdir -p /yarn_logs
-    hadoop fs -mkdir -p /spark_events_log
-    
-    echo "Configuring Hive Metastore..."
-    schematool -dbType postgres -info || schematool -dbType postgres -initSchema
-    echo "Waiting for metastore to start..."
 
     echo "Starting Hive Metastore..."
     hive --service metastore > $HADOOP_HOME/logs/metastore.log 2>&1 &
-    
-    if [ ! -f " $HADOOP_HOME/logs/metastore.log" ]; then
-    echo  "Hive Metastore initialized successfully!"
+    echo "Waiting for metastore to start..."
+    sleep 15
+
+    if [ -f "$HADOOP_HOME/logs/metastore.log" ]; then
+        echo "Hive Metastore initialized successfully!"
+    else
+        echo "Hive Metastore failed to initialize!"
+        cat "$HADOOP_HOME/logs/metastore.log"
     fi
+
+    echo "Configuring Hive Metastore..."
+    schematool -dbType postgres -info || schematool -dbType postgres -initSchema
+    
 fi
 
 # # # until hive -e "SHOW DATABASES;"; do
