@@ -25,50 +25,43 @@ wait_for_port() {
     return 1
 }
 
-wait_for_metastore_beeline() {
-    local max_attempts=$1
-    local wait_seconds=$2
-    local attempt=1
-    while [ $attempt -le $max_attempts ]; do
-        if beeline -u "jdbc:hive2://" -e "SHOW DATABASES;" >/dev/null 2>&1; then
-            return 0
-        fi
-        log "Attempt $attempt/$max_attempts - Hive Metastore not responding via Beeline..."
-        attempt=$((attempt + 1))
-        sleep "$wait_seconds"
-    done
-    return 1
+log "Configuring Hive Metastore schema..."
+schematool -dbType postgres -info || {
+    log "Schema not found, initializing..."
+    schematool -dbType postgres -initSchema
 }
 
-if [ $attempt -lt $max_attempts ]; then
-    log "Starting Hive Metastore..."
-    hive --service metastore > "$HADOOP_HOME/logs/metastore.log" 2>&1 &
+log "Validating and upgrading schema if needed..."
+schematool -dbType postgres -validate || {
+    log "Schema validation failed, upgrading..."
+    schematool -dbType postgres -upgradeSchema
+}
 
-    log "Waiting for Hive Metastore port $METASTORE_PORT..."
-    if ! wait_for_port $METASTORE_PORT $METASTORE_MAX_ATTEMPTS $METASTORE_WAIT_SECONDS; then
-        log "ERROR: Hive Metastore did not start!"
-        cat "$HADOOP_HOME/logs/metastore.log" || true
-        exit 1
-    fi
+log "Starting Hive Metastore service..."
+hive --service metastore > "$HADOOP_HOME/logs/metastore.log" 2>&1 &
+METASTORE_PID=$!
 
+log "Waiting for Hive Metastore port $METASTORE_PORT..."
+if ! wait_for_port $METASTORE_PORT $METASTORE_MAX_ATTEMPTS $METASTORE_WAIT_SECONDS; then
+    log "ERROR: Hive Metastore port not available!"
     if [ -f "$HADOOP_HOME/logs/metastore.log" ]; then
-        log "Hive Metastore initialized successfully!"
-    else
-        log "Hive Metastore failed to initialize!"
-        cat "$HADOOP_HOME/logs/metastore.log" || true
-        exit 1
+        log "Metastore logs:"
+        cat "$HADOOP_HOME/logs/metastore.log"
     fi
-
-    log "Configuring Hive Metastore..."
-    schematool -dbType postgres -info || schematool -dbType postgres -initSchema
-    schematool -dbType postgres -validate || schematool -dbType postgres -upgradeSchema
-fi
-
-log "Waiting for Hive Metastore to respond via Beeline..."
-if ! wait_for_metastore_beeline $METASTORE_MAX_ATTEMPTS $METASTORE_WAIT_SECONDS; then
-    log "ERROR: Hive Metastore is not responding!"
+    kill $METASTORE_PID 2>/dev/null || true
     exit 1
 fi
 
+log "Hive Metastore port is ready!"
+
+log "Hive Metastore is ready and listening on port $METASTORE_PORT!"
+
 log "Creating bronze schema in metastore..."
-beeline -u "jdbc:hive2://" -e "CREATE SCHEMA IF NOT EXISTS BRONZE;"
+
+if ! hive -e "CREATE SCHEMA IF NOT EXISTS BRONZE;"; then
+    log "ERRO: Falha ao criar o schema BRONZE via Hive CLI!"
+    exit 1
+fi
+
+log "Hive Metastore initialization completed successfully!"
+log "Metastore PID: $METASTORE_PID"
