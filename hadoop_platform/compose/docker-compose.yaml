@@ -24,7 +24,6 @@ services:
     image: spark_hudi
     environment:
       <<: *common-env
-    # entrypoint: ["bash", "-c", "bash /opt/nodes_files/master_entrypoint.sh"]
     entrypoint: ["bash", "-c", "\
                   bash /opt/nodes_files/start_hdfs.sh && \
                   bash /opt/nodes_files/start_hive.sh && \
@@ -47,7 +46,7 @@ services:
       - "9866:9866"      
       - "9868:9868"
       - "9870:9870"
-      - "10000:10000"  
+      - "10000:10000"
     depends_on:
       postgres:
         condition: service_healthy

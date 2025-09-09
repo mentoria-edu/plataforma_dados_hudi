@@ -1,34 +1,29 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, current_timestamp
+from pyspark.sql.functions import col, trim, regexp_replace, when, isnan, isnull
 from pyspark.sql.types import StringType, LongType, DoubleType, TimestampType
 
-PATH_CSV_FILE = "/csvs/qualificacao_socios.csv"
-TABLE_NAME = "responsible_qualification"
+TABLE_NAME_BRONZE = "bronze.responsible_qualification"
+TABLE_NAME_SILVER = "responsible_qualification"
 
-spark = SparkSession.builder.appName(f"bronze_{TABLE_NAME}").getOrCreate()
+spark = SparkSession.builder.appName(f"silver_{TABLE_NAME_SILVER}").getOrCreate()
 
-df = spark.read.csv(
-    PATH_CSV_FILE,
-    sep=";",
-    header=False,
-    inferSchema=False
-)
-
-df = df.withColumnsRenamed({
-    "_c0": "id_qualification",
-    "_c1": "description",
-})
-
-
-df = df.withColumn("created_at", current_timestamp())
+df = spark.read.table(TABLE_NAME_BRONZE)
 
 df = df \
-    .withColumn("id_qualification", col("id_qualification").cast(StringType())) \
-    .withColumn("description", col("description").cast(StringType())) \
+    .withColumn("id_qualification", trim(col("id_qualification"))) \
+    .withColumn("description", trim(col("description"))) \
     
+df = df.filter(
+    col("id_qualification").isNotNull() & 
+    (col("id_qualification") != "") & 
+    col("description").isNotNull() & 
+    (col("description") != "")
+)
+
+df = df.dropDuplicates(["id_qualification"])
 
 hudi_options = {
-    "hoodie.table.name": TABLE_NAME,
+    "hoodie.table.name": TABLE_NAME_SILVER,
     "hoodie.datasource.write.recordkey.field": "id_qualification",
     "hoodie.datasource.write.operation": "insert",
     "hoodie.parquet.small.file.limit": "0",
@@ -38,12 +33,14 @@ hudi_options = {
     "hoodie.clustering.inline.max.commits": "5",
     "hoodie.clustering.plan.strategy.target.file.max.bytes": "125829120",
     "hoodie.clustering.plan.strategy.small.file.limit": "123731968",
-    "hoodie.clustering.plan.strategy.sort.columns": "cnpj",
+    "hoodie.clustering.plan.strategy.sort.columns": "id_qualification",
     "hoodie.clustering.execution.strategy.class": "org.apache.hudi.client.clustering.run.strategy.SparkSortAndSizeExecutionStrategy",
     "hoodie.datasource.write.table.type": "COPY_ON_WRITE",
 }
 
+spark.sql("CREATE DATABASE IF NOT EXISTS silver")
+
 df.write.format("hudi") \
-    .mode("append") \
+    .mode("overwrite") \
     .options(**hudi_options) \
-    .saveAsTable(f"bronze.{TABLE_NAME}")
+    .saveAsTable(f"silver.{TABLE_NAME_SILVER}")

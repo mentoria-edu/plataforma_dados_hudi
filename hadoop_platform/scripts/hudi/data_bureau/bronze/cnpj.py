@@ -25,7 +25,6 @@ df = df.withColumnsRenamed({
 })
 
 df = df.na.fill({"company_size": "00"})
-
 df = df.withColumn("created_at", current_timestamp())
 
 df = df \

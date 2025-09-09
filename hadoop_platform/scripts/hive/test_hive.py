@@ -13,10 +13,6 @@ spark = (
 
 spark.sql("CREATE DATABASE IF NOT EXISTS bronze")
 
-# warehouse_dir = spark.conf.get("spark.sql.warehouse.dir")
-# print(f"Diretório warehouse configurado: {warehouse_dir}")
-# print(f"Conectado ao Hive Metastore em: thrift://{metastore_host}:{metastore_port}")
-
 dados = [(1, "Nome_1"), (2, "Nome_2"), (3, "Nome_3")]
 df = spark.createDataFrame(dados, ["id", "nome"])
 
