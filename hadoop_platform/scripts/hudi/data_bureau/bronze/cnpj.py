@@ -41,15 +41,7 @@ hudi_options = {
     "hoodie.table.name": TABLE_NAME,
     "hoodie.datasource.write.recordkey.field": "cnpj",
     "hoodie.datasource.write.operation": "insert",
-    "hoodie.parquet.small.file.limit": "0",
-    "hoodie.parquet.max.file.size": "125829120", 
-    "hoodie.copyonwrite.record.size.estimate": "1024",
-    "hoodie.clustering.inline": "true",
-    "hoodie.clustering.inline.max.commits": "5",
-    "hoodie.clustering.plan.strategy.target.file.max.bytes": "125829120",
-    "hoodie.clustering.plan.strategy.small.file.limit": "123731968",
     "hoodie.clustering.plan.strategy.sort.columns": "cnpj",
-    "hoodie.clustering.execution.strategy.class": "org.apache.hudi.client.clustering.run.strategy.SparkSortAndSizeExecutionStrategy",
     "hoodie.datasource.write.table.type": "COPY_ON_WRITE",
 }
 
